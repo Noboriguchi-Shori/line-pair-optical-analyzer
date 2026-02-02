@@ -41,9 +41,11 @@ class LineAnalyzer:
             return None, "ファイルが選択されていません"
         
         try:
-            df = pd.read_csv(file.name, header=None)
+            # Gradio 6ではfileは直接ファイルパス（文字列）
+            file_path = file if isinstance(file, str) else file.name
+            df = pd.read_csv(file_path, header=None)
             self.original_data = df.iloc[:, 0].dropna().values
-            self.file_name = os.path.basename(file.name)
+            self.file_name = os.path.basename(file_path)
             return np.mean(self.original_data), f"読み込み完了: {self.file_name} ({len(self.original_data):,} 点)"
         except Exception as e:
             return None, f"読み込みエラー: {e}"
@@ -561,6 +563,9 @@ def on_file_upload(file):
     
     if threshold is None:
         return 128, msg, None, None, None, None, None, None
+    
+    # numpy型をPythonネイティブ型に変換
+    threshold = float(threshold)
     
     # 初期解析
     analyzer.analyze("None", 10, threshold, 10, 90)
